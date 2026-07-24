@@ -16,6 +16,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: golang:1.26
     steps:
     - name: Extract CoreDNS version
       id: version
@@ -38,10 +40,6 @@ jobs:
         repository: coredns/coredns
         path: ./coredns
         ref: ${{ steps.version.outputs.coredns_version }}
-
-    - uses: actions/setup-go@v6
-      with:
-        go-version: '1.26'
 
     - name: Build app
       run: |
