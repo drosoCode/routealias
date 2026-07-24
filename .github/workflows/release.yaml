@@ -11,8 +11,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.26
     steps:
     - name: Extract CoreDNS version
       id: version
@@ -38,9 +36,10 @@ jobs:
 
     - name: Build app
       run: |
-        cd coredns
-        ln -s ../blocker ./plugin/blocker
-        ln -s ../routealias ./plugin/routealias
+        cd coredns/plugin
+        ln -s ../../blocker ./blocker
+        ln -s ../../routealias ./routealias
+        cd ..
         cp ../routealias/plugin.cfg ./plugin.cfg
         go generate
         GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build
