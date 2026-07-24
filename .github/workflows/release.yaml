@@ -8,11 +8,6 @@ on:
 permissions:
   contents: write
 
-env:
-  GOOS: freebsd
-  GOARCH: amd64
-  CGO_ENABLED: "0"
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -48,7 +43,7 @@ jobs:
         ln -s ../routealias ./plugin/routealias
         cp ../routealias/plugin.cfg ./plugin.cfg
         go generate
-        go build
+        GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build
         mv coredns coredns_freebsd_amd64
 
     - name: Release
