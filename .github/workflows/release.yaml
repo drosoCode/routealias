@@ -40,13 +40,14 @@ jobs:
 
     - uses: actions/setup-go@v6
       with:
-        go-version: '1.25'
+        go-version: '1.26'
 
     - name: Build app
       run: |
         cd coredns
         ln -s ../blocker ./plugin/blocker
         ln -s ../routealias ./plugin/routealias
+        cp ../routealias/plugin.cfg ./plugin.cfg
         go generate
         go build
         mv coredns coredns_freebsd_amd64
