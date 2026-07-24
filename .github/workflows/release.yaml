@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v.*"
+
+permissions:
+  contents: write
+
+env:
+  GOOS: freebsd
+  GOARCH: amd64
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Extract CoreDNS version
+      id: version
+      run: |
+        TAG="${GITHUB_REF_NAME}"
+        COREDNS_VERSION=$(echo "$TAG" | grep -oE '^v[0-9]+\.[0-9]+\.[0-9]+')
+        echo "coredns_version=$COREDNS_VERSION" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/checkout@v7
+      with:
+        path: ./routealias
+
+    - uses: actions/checkout@v7
+      with:
+        repository: icyflame/blocker
+        path: ./blocker
+
+    - uses: actions/checkout@v7
+      with:
+        repository: coredns/coredns
+        path: ./coredns
+        ref: ${{ steps.version.outputs.coredns_version }}
+
+    - uses: actions/setup-go@v6
+      with:
+        go-version: '1.25'
+
+    - name: Build app
+      run: |
+        cd coredns
+        ln -s ../blocker ./plugin/blocker
+        ln -s ../routealias ./plugin/routealias
+        go generate
+        go build
+        mv coredns coredns_freebsd_amd64
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: coredns/coredns_freebsd_amd64
