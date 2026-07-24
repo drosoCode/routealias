@@ -39,8 +39,11 @@ jobs:
         cd coredns/plugin
         ln -s ../../blocker ./blocker
         ln -s ../../routealias ./routealias
+        ls
         cd ..
         cp ../routealias/plugin.cfg ./plugin.cfg
+        ls
+        pwd
         go generate
         GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build
         mv coredns coredns_freebsd_amd64
