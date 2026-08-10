@@ -21,6 +21,7 @@ type RouteAlias struct {
 	cache           Cache
 	alias_name      string
 	wait_for_record bool
+	kill_state      bool
 }
 
 func NewRouteAlias(next plugin.Handler, config Config) *RouteAlias {
@@ -31,6 +32,7 @@ func NewRouteAlias(next plugin.Handler, config Config) *RouteAlias {
 		cache:           NewCache(),
 		wait_for_record: config.wait_for_record,
 		alias_name:      config.alias_name,
+		kill_state:      config.kill_state,
 	}
 	if config.flush_on_start {
 		err := ra.router.FlushAlias(config.alias_name)
@@ -88,8 +90,15 @@ func (w *ResponseWriter) AddIfRequired(answers []dns.RR) {
 				err := w.r.router.AddAliasIP(w.r.alias_name, ip)
 				if err != nil {
 					log.Errorf("failed to add ip: %s to opnsense alias: %s: %s", ip, w.r.alias_name, err.Error())
-				} else {
-					w.r.cache.Add(ip)
+					return
+				}
+				w.r.cache.Add(ip)
+
+				if w.r.kill_state {
+					err = w.r.router.KillStates(ip)
+					if err != nil {
+						log.Errorf("failed to kill state for ip: %s: %s", ip, err.Error())
+					}
 				}
 			}
 

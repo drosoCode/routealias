@@ -18,6 +18,7 @@ type Config struct {
 	whitelist_path  string
 	flush_on_start  bool
 	wait_for_record bool
+	kill_state      bool
 }
 
 // init registers this plugin.
@@ -90,6 +91,16 @@ func setup(c *caddy.Controller) error {
 					return c.Errf("flush_on_start: %v", err)
 				}
 				cfg.flush_on_start = v
+			case "kill_state":
+				args := c.RemainingArgs()
+				if len(args) != 1 {
+					return c.ArgErr()
+				}
+				v, err := parseBool(args[0])
+				if err != nil {
+					return c.Errf("kill_state: %v", err)
+				}
+				cfg.kill_state = v
 			case "wait_for_record":
 				args := c.RemainingArgs()
 				if len(args) != 1 {

@@ -98,3 +98,25 @@ func (a *OPNsenseAPI) FlushAlias(alias_name string) error {
 
 	return nil
 }
+
+func (a *OPNsenseAPI) KillStates(ip string) error {
+	form := url.Values{}
+	form.Add("filter", ip)
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/diagnostics/firewall/kill_states", a.baseUrl), strings.NewReader(form.Encode()))
+	if err != nil {
+		return fmt.Errorf("creating request: %w", err)
+	}
+
+	req.Header.Add("Authorization", a.authHeader)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("executing request: %w", err)
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+	return nil
+}
