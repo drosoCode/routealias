@@ -10,15 +10,16 @@ import (
 )
 
 type Config struct {
-	host            string
-	alias_name      string
-	api_key         string
-	api_secret      string
-	skip_verify     bool
-	whitelist_path  string
-	flush_on_start  bool
-	wait_for_record bool
-	kill_state      bool
+	host             string
+	alias_name       string
+	api_key          string
+	api_secret       string
+	skip_verify      bool
+	whitelist_path   string
+	flush_on_start   bool
+	wait_for_record  bool
+	kill_state       bool
+	cname_resolution bool
 }
 
 // init registers this plugin.
@@ -111,6 +112,16 @@ func setup(c *caddy.Controller) error {
 					return c.Errf("wait_for_record: %v", err)
 				}
 				cfg.wait_for_record = v
+			case "cname_resolution":
+				args := c.RemainingArgs()
+				if len(args) != 1 {
+					return c.ArgErr()
+				}
+				v, err := parseBool(args[0])
+				if err != nil {
+					return c.Errf("cname_resolution: %v", err)
+				}
+				cfg.cname_resolution = v
 			}
 		}
 	}

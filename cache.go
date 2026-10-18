@@ -1,28 +1,30 @@
 package routealias
 
-import "sync"
+import (
+	"sync"
+)
 
-type Cache struct {
-	data map[string]struct{}
-	lock sync.RWMutex
+type Cache[K comparable, V any] struct {
+	mu    sync.RWMutex
+	store map[K]V
 }
 
-func NewCache() Cache {
-	return Cache{
-		data: map[string]struct{}{},
-		lock: sync.RWMutex{},
+func NewCache[K comparable, V any]() *Cache[K, V] {
+	return &Cache[K, V]{
+		mu:    sync.RWMutex{},
+		store: make(map[K]V),
 	}
 }
 
-func (c *Cache) Exists(key string) bool {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-	_, ok := c.data[key]
-	return ok
+func (c *Cache[K, V]) Get(key K) (V, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	value, ok := c.store[key]
+	return value, ok
 }
 
-func (c *Cache) Add(key string) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	c.data[key] = struct{}{}
+func (c *Cache[K, V]) Set(key K, value V) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.store[key] = value
 }
