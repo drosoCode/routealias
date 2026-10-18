@@ -23,9 +23,8 @@ type RouteAlias struct {
 	kill_state       bool
 	cname_resolution bool
 
-	saved_ip_cache   *Cache[string, struct{}] // list IPs already added in the router alias
-	cname_cache      *Cache[string, string]   // maps CNAME target to source for resolution
-	name_to_ip_cache *Cache[string, []string] // saves dns name to IPs in case the name is matched after CNAME resolution
+	saved_ip_cache *Cache[string, struct{}] // list IPs already added in the router alias
+	cname_cache    *Cache[string, string]   // maps CNAME target to source for resolution
 }
 
 func NewRouteAlias(next plugin.Handler, config Config) *RouteAlias {
@@ -35,7 +34,6 @@ func NewRouteAlias(next plugin.Handler, config Config) *RouteAlias {
 		whitelist:        NewABPList(config.whitelist_path),
 		saved_ip_cache:   NewCache[string, struct{}](),
 		cname_cache:      NewCache[string, string](),
-		name_to_ip_cache: NewCache[string, []string](),
 		wait_for_record:  config.wait_for_record,
 		alias_name:       config.alias_name,
 		kill_state:       config.kill_state,
@@ -136,16 +134,9 @@ func (w *ResponseWriter) AddIfRequired(answers []dns.RR) {
 			continue
 		}
 
-		if ip != "" {
-			if w.r.match_name(answer.Header().Name) {
-				// if name matches whitelist
-				w.r.save_ip(ip)
-			} else if w.r.cname_resolution {
-				// if no match, save the name->ip mapping in case this gets matched later
-				val, _ := w.r.name_to_ip_cache.Get(answer.Header().Name)
-				val = append(val, ip)
-				w.r.name_to_ip_cache.Set(answer.Header().Name, val)
-			}
+		if ip != "" && w.r.match_name(answer.Header().Name) {
+			// if name matches whitelist
+			w.r.save_ip(ip)
 		}
 	}
 }
